@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0b0d12">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="My Money">
+<title>My Money</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%2300a3e0'/%3E%3Ctext x='50' y='72' font-size='60' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'%3E%E0%A7%B3%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%2300a3e0'/%3E%3Ctext x='50' y='72' font-size='60' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'%3E%E0%A7%B3%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+ --bg:#0b0d12;--card:#151922;--card2:#1d2230;--line:#2a3040;
+ --txt:#eef1f6;--muted:#8b94a7;--acc:#00a3e0;--grn:#22c55e;--red:#f43f5e;
+ --amb:#f59e0b;--pur:#8b5cf6;--cyn:#06b6d4;--pink:#ec4899;
+ --sb:env(safe-area-inset-bottom,0px);--st:env(safe-area-inset-top,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--txt);font-family:"Segoe UI",system-ui,-apple-system,"Noto Sans Bengali",sans-serif;font-size:15px;overscroll-behavior-y:none}
+#app{padding:calc(12px + var(--st)) 12px calc(88px + var(--sb));max-width:640px;margin:0 auto}
+.hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:8px}
+.hd h1{font-size:19px;font-weight:700}
+.hd .d{font-size:11px;color:var(--muted);margin-top:1px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:15px;margin-bottom:12px}
+.lbl{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.9px;font-weight:600}
+.big{font-size:28px;font-weight:700;margin-top:5px;letter-spacing:-.5px}
+.grn{color:var(--grn)}.red{color:var(--red)}.amb{color:var(--amb)}.acc{color:var(--acc)}
+.mut{color:var(--muted)}.pur{color:var(--pur)}.pink{color:var(--pink)}.cyn{color:var(--cyn)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.g2 .card,.g3 .card,.g4 .card{margin:0}
+.g2 .big{font-size:19px}.g3 .big{font-size:16px}
+.g4 .card{padding:11px 9px}
+.g4 .lbl{font-size:9.5px;letter-spacing:.4px}
+.g4 .big{font-size:14.5px;margin-top:4px}
+.row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid #212736;gap:8px}
+.row:last-child{border-bottom:none}
+.row .t{font-size:14px;font-weight:500}
+.row .s{font-size:11.5px;color:var(--muted);margin-top:2px}
+.amt{font-variant-numeric:tabular-nums;font-weight:600;font-size:14.5px;white-space:nowrap}
+h2{font-size:13px;font-weight:700;margin-bottom:9px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+h2 .lnk{font-size:11.5px;color:var(--acc);font-weight:500;cursor:pointer}
+label{display:block;font-size:11px;color:var(--muted);margin-bottom:5px;font-weight:600}
+input,select{width:100%;background:var(--card2);border:1px solid var(--line);color:var(--txt);padding:12px;border-radius:11px;font-size:16px;font-family:inherit;-webkit-appearance:none}
+input:focus,select:focus{outline:none;border-color:var(--acc)}
+select{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' stroke='%238b94a7' stroke-width='1.6' fill='none'/></svg>");background-repeat:no-repeat;background-position:right 12px center}
+.fld{margin-bottom:11px}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{background:var(--card2);border:1px solid var(--line);color:var(--txt);padding:12px 14px;border-radius:11px;font-size:14px;font-family:inherit;cursor:pointer;width:100%;font-weight:600}
+.btn:active{opacity:.7}
+.btn.p{background:var(--acc);border-color:var(--acc);color:#fff}
+.btn.g{background:var(--grn);border-color:var(--grn);color:#062d16}
+.btn.r{border-color:var(--red);color:var(--red)}
+.btn.sm{padding:8px 12px;font-size:12.5px;width:auto}
+.seg{display:grid;grid-auto-flow:column;gap:6px;background:var(--card2);padding:4px;border-radius:12px;margin-bottom:13px}
+.seg b{text-align:center;padding:11px 4px;border-radius:9px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer}
+.seg b.on{background:var(--acc);color:#fff}
+.seg b.on[data-k="expense"]{background:var(--red);color:#fff}
+.seg b.on[data-k="income"]{background:var(--grn);color:#062d16}
+.seg b.on[data-k="transfer"]{background:var(--pur);color:#fff}
+.ticks{display:grid;gap:7px;margin-bottom:12px}
+.tick{display:flex;align-items:center;gap:11px;background:var(--card2);border:1.5px solid var(--line);padding:12px;border-radius:12px;cursor:pointer}
+.tick .bx{width:21px;height:21px;border-radius:6px;border:2px solid var(--line);display:grid;place-items:center;flex:0 0 auto;font-size:12px;color:transparent;font-weight:700}
+.tick.on{border-color:var(--acc);background:rgba(0,163,224,.09)}
+.tick.on .bx{background:var(--acc);border-color:var(--acc);color:#fff}
+.tick .tt{font-size:14px;font-weight:600}
+.tick .ss{font-size:11px;color:var(--muted);margin-top:2px}
+.tick.on[data-c="office"]{border-color:var(--amb);background:rgba(245,158,11,.09)}
+.tick.on[data-c="office"] .bx{background:var(--amb);border-color:var(--amb)}
+.tick.on[data-c="medical"]{border-color:var(--pink);background:rgba(236,72,153,.09)}
+.tick.on[data-c="medical"] .bx{background:var(--pink);border-color:var(--pink)}
+.tick.on[data-c="loan"]{border-color:var(--pur);background:rgba(139,92,246,.09)}
+.tick.on[data-c="loan"] .bx{background:var(--pur);border-color:var(--pur)}
+.chips{display:flex;gap:7px;overflow-x:auto;padding-bottom:4px;margin-bottom:11px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;background:var(--card2);border:1px solid var(--line);padding:8px 13px;border-radius:20px;font-size:12.5px;color:var(--muted);cursor:pointer;white-space:nowrap}
+.chip.on{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+.pill{display:inline-block;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.3px;vertical-align:middle}
+.p-pend{background:rgba(245,158,11,.16);color:var(--amb)}
+.p-done{background:rgba(34,197,94,.16);color:var(--grn)}
+.p-off{background:rgba(245,158,11,.16);color:var(--amb)}
+.p-med{background:rgba(236,72,153,.16);color:var(--pink)}
+.p-loan{background:rgba(139,92,246,.16);color:var(--pur)}
+.p-open{background:rgba(6,182,212,.16);color:var(--cyn)}
+.p-now{background:rgba(0,163,224,.16);color:var(--acc)}
+.ico{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:15px;flex:0 0 auto}
+.fl{display:flex;align-items:center;gap:11px;min-width:0}
+.fl .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.x{background:none;border:none;color:var(--muted);font-size:17px;padding:4px 7px;cursor:pointer}
+.x:active{color:var(--red)}
+.dots{background:none;border:none;color:var(--muted);font-size:19px;padding:2px 8px;cursor:pointer;line-height:1}
+nav{position:fixed;bottom:0;left:0;right:0;background:rgba(13,16,22,.97);backdrop-filter:blur(14px);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding:7px 0 calc(7px + var(--sb));z-index:50}
+nav div{text-align:center;padding:4px 0;cursor:pointer;color:var(--muted)}
+nav div.on{color:var(--acc)}
+nav .n-i{font-size:19px;line-height:1.25}
+nav .n-t{font-size:9.5px;font-weight:600}
+.empty{text-align:center;color:var(--muted);padding:24px 12px;font-size:13px;line-height:1.6}
+.bar{height:8px;background:var(--card2);border-radius:5px;overflow:hidden;margin-top:6px;display:flex}
+.bar i{display:block;height:100%}
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:60;display:none;align-items:flex-end}
+.sheet.on{display:flex}
+.sheet .in{background:var(--card);width:100%;max-width:640px;margin:0 auto;border-radius:20px 20px 0 0;padding:18px 16px calc(20px + var(--sb));max-height:90vh;overflow:auto}
+.sheet h3{font-size:16px;margin-bottom:14px}
+.mi{padding:14px 10px;border-bottom:1px solid var(--line);cursor:pointer;font-size:14.5px;display:flex;gap:11px;align-items:center}
+.mi:last-child{border:none}
+.toast{position:fixed;bottom:calc(94px + var(--sb));left:50%;transform:translateX(-50%);background:var(--card2);border:1px solid var(--acc);padding:11px 18px;border-radius:24px;font-size:13px;opacity:0;transition:.25s;pointer-events:none;z-index:99;max-width:90%;text-align:center}
+.toast.on{opacity:1}
+.note{font-size:11.5px;color:var(--muted);line-height:1.6}
+.info{font-size:12px;line-height:1.55;background:var(--card2);border-radius:10px;padding:11px;margin-bottom:11px}
+hr{border:none;border-top:1px solid var(--line);margin:13px 0}
+.mono{font-variant-numeric:tabular-nums}
+.crow{display:grid;grid-template-columns:1fr 104px 30px;gap:7px;align-items:center;margin-bottom:7px}
+.crow input,.crow select{padding:10px;font-size:14px}
+.ctot{display:flex;justify-content:space-between;padding:11px;background:var(--card2);border-radius:10px;font-weight:700;margin:10px 0}
+.duebar{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px dashed #2f4a52}
+.duebar .k{font-size:11px;color:var(--muted);font-weight:600}
+.duebar .v{font-size:14px;font-weight:700}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<nav id="nav"></nav>
+<div class="sheet" id="sheet" onclick="if(event.target===this)closeSheet()"><div class="in" id="sheetIn"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════ DATA ═══════════ */
+const KEY='mymoney_v3';
+const AIC={cash:'💵',bank:'🏦',mfs:'📱',card:'💳'};
+const ATN={cash:'Cash',bank:'Bank / Debit Card',mfs:'Mobile Money',card:'Credit Card'};
+const CAT={
+ personal:['Food & Grocery','Transport','Rent','Utilities','Mobile/Internet','Health','Education','Family','Shopping','Entertainment','Charity','Other'],
+ office:['Fuel','Maintenance','Driver Salary','Toll','Parking','Travel/Fare','Hotel','Food (Official)','Market Visit','Stationery','Mobile Bill','Trade Entertainment','Misc Official'],
+ medical:['Doctor Fee','Medicine','Diagnostic Test','Hospital','Dental','Optical','Family Medical','Other Medical']
+};
+let db,view='home',kind='expense',expType='personal',incType='salary',pickedCat=null;
+
+function blank(){return{
+ accounts:[
+  {id:1,name:'Cash in Hand',type:'cash',opening:0},
+  {id:2,name:'Bank Account',type:'bank',opening:0},
+  {id:3,name:'bKash',type:'mfs',opening:0}],
+ tx:[],assets:[],debts:[],settle:[],seq:100};}
+function load(){
+ try{db=JSON.parse(localStorage.getItem(KEY))||blank()}catch(e){db=blank()}
+ const b=blank();['accounts','tx','assets','debts','settle'].forEach(k=>{if(!Array.isArray(db[k]))db[k]=b[k]});
+ if(!db.seq)db.seq=100;
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){toast('Storage full')}}
+const nid=()=>++db.seq;
+
+/* ═══════════ DATE HELPERS (LOCAL TIME — never UTC) ═══════════ */
+const p2=n=>String(n).padStart(2,'0');
+const dstr=d=>d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
+const mstr=d=>d.getFullYear()+'-'+p2(d.getMonth()+1);
+const today=()=>dstr(new Date());
+const thisMonth=()=>mstr(new Date());
+function monthBack(n){const d=new Date();return mstr(new Date(d.getFullYear(),d.getMonth()-n,1))}
+
+/* ═══════════ HELPERS ═══════════ */
+const T=n=>'৳'+Math.round(Math.abs(Number(n)||0)).toLocaleString('en-IN');
+const esc=s=>String(s==null?'':s).replace(/[<>&"']/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));
+const dshow=d=>new Date(d+'T00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
+const mshow=m=>new Date(m+'-01T00:00').toLocaleDateString('en-GB',{month:'short',year:'2-digit'}).replace(' ',"'");
+const mlong=m=>new Date(m+'-01T00:00').toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+const acc=id=>db.accounts.find(a=>a.id==id);
+const accName=id=>{const a=acc(id);return a?a.name:'—'};
+function toast(m){const t=document.getElementById('toast');t.innerHTML=m;t.classList.add('on');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),2400)}
+function closeSheet(){document.getElementById('sheet').classList.remove('on')}
+function sheet(h){document.getElementById('sheetIn').innerHTML=h;document.getElementById('sheet').classList.add('on');document.getElementById('sheet').scrollTop=0}
+
+/* ═══════════ BALANCES ═══════════ */
+/* Cards hold NEGATIVE balance = outstanding due.
+   Entries flagged t.opening are back-entered claims: they count as receivable
+   but must NOT move any account balance (that money moved before tracking). */
+function accBalance(id){
+ const a=acc(id);if(!a)return 0;
+ let b=a.type==='card'? -Number(a.opening||0) : Number(a.opening||0);
+ db.tx.forEach(t=>{
+  if(t.opening)return;
+  if(t.kind==='income'&&t.acc==id)b+=t.amt;
+  if(t.kind==='expense'){
+   if(t.acc==id)b-=t.amt;
+   if(t.expType==='loan'&&t.loanKind==='card'&&t.loanId==id)b+=t.amt;
+  }
+  if(t.kind==='transfer'){if(t.acc==id)b-=t.amt;if(t.to==id)b+=t.amt;}
+ });
+ db.debts.forEach(d=>{
+  if(d.acc==id)b+= d.type==='owe'? Number(d.amount) : -Number(d.amount);
+  (d.pay||[]).forEach(p=>{if(p.acc==id)b+= d.type==='owe'? -p.amt : p.amt;});
+ });
+ return b;
+}
+const liquidAccs=()=>db.accounts.filter(a=>a.type!=='card');
+const cardAccs =()=>db.accounts.filter(a=>a.type==='card');
+const totalCash=()=>db.accounts.filter(a=>a.type==='cash').reduce((s,a)=>s+accBalance(a.id),0);
+const totalBank=(only)=>db.accounts.filter(a=>only?a.type===only:(a.type==='bank'||a.type==='mfs')).reduce((s,a)=>s+accBalance(a.id),0);
+const totalLiquid=()=>liquidAccs().reduce((s,a)=>s+accBalance(a.id),0);
+const cardDue=id=>Math.max(0,-accBalance(id));
+const totalCardDue=()=>cardAccs().reduce((s,a)=>s+cardDue(a.id),0);
+
+/* Headline = LIQUID MONEY ONLY: cash + bank + MFS.
+   Claims, assets, lending, debts and card dues are shown separately,
+   never mixed into the headline figure. */
+const liquidMoney=()=>totalLiquid();
+
+/* ═══════════ CLAIMS ═══════════ */
+const claimTx=k=>db.tx.filter(t=>t.kind==='expense'&&t.expType===k);
+function claimMonths(k){
+ const g={};
+ claimTx(k).forEach(t=>{const m=t.date.slice(0,7);(g[m]=g[m]||[]).push(t)});
+ return Object.keys(g).sort().reverse().map(m=>{
+  const items=g[m].sort((a,b)=>a.date.localeCompare(b.date));
+  const total=items.reduce((s,t)=>s+t.amt,0);
+  const st=db.settle.find(s=>s.kind===k&&s.month===m);
+  return{month:m,items,total,settle:st||null,settled:!!st,
+   opening:items.every(t=>t.opening),hasOpening:items.some(t=>t.opening)};
+ });
+}
+const claimOpen=k=>claimMonths(k).filter(b=>!b.settled).reduce((s,b)=>s+b.total,0);
+const receivable=()=>claimOpen('office')+claimOpen('medical');
+const gotFor=b=>b.settle? Number(b.settle.received||0) : 0;
+const allowanceOf=b=>Math.max(0,gotFor(b)-b.total);
+
+/* ═══════════ ASSETS / DEBTS ═══════════ */
+const assetsVal=()=>db.assets.reduce((s,a)=>s+Number(a.value||0),0);
+function debtPaid(d){
+ const legacy=(d.pay||[]).reduce((s,p)=>s+Number(p.amt),0);
+ const viaTx=db.tx.filter(t=>t.kind==='expense'&&t.expType==='loan'&&t.loanKind==='debt'&&t.loanId==d.id).reduce((s,t)=>s+t.amt,0);
+ return legacy+viaTx;
+}
+const debtLeft=d=>Math.max(0,Number(d.amount)-debtPaid(d));
+const iOwe=()=>db.debts.filter(d=>d.type==='owe').reduce((s,d)=>s+debtLeft(d),0)+totalCardDue();
+const owedMe=()=>db.debts.filter(d=>d.type==='owed').reduce((s,d)=>s+debtLeft(d),0);
+
+/* ═══════════ MONTH SUMS ═══════════ */
+function mSum(m,f){return db.tx.filter(t=>!t.opening&&t.date.slice(0,7)===m&&f(t)).reduce((s,t)=>s+t.amt,0)}
+const mIncome  =m=>mSum(m,t=>t.kind==='income');
+const mPersonal=m=>mSum(m,t=>t.kind==='expense'&&t.expType==='personal');
+const mOffice  =m=>mSum(m,t=>t.kind==='expense'&&t.expType==='office');
+const mMedical =m=>mSum(m,t=>t.kind==='expense'&&t.expType==='medical');
+const mLoan    =m=>mSum(m,t=>t.kind==='expense'&&t.expType==='loan');
+
+/* ═══════════ SHELL ═══════════ */
+function render(){
+ document.getElementById('app').innerHTML=({home:vHome,add:vAdd,list:vList,claim:vClaim,more:vMore})[view]();
+ document.getElementById('nav').innerHTML=[['home','🏠','Home'],['add','➕','Add'],['list','📋','History'],['claim','🧾','Claims'],['more','⚙️','More']]
+  .map(([k,i,t])=>`<div class="${view===k?'on':''}" onclick="go('${k}')"><div class="n-i">${i}</div><div class="n-t">${t}</div></div>`).join('');
+ window.scrollTo(0,0);
+}
+function go(v){view=v;pickedCat=null;render()}
+
+/* ═══════════ HOME ═══════════ */
+function vHome(){
+ const m=thisMonth(),inc=mIncome(m),per=mPersonal(m),off=mOffice(m),med=mMedical(m),ln=mLoan(m);
+ const liq=liquidMoney(),sv=inc-per-ln,rate=inc>0?sv/inc*100:0;
+ const byCat={};db.tx.filter(t=>!t.opening&&t.kind==='expense'&&t.expType==='personal'&&t.date.slice(0,7)===m)
+  .forEach(t=>byCat[t.cat]=(byCat[t.cat]||0)+t.amt);
+ const cats=Object.entries(byCat).sort((a,b)=>b[1]-a[1]).slice(0,5);
+ const pal=['#00a3e0','#22c55e','#f59e0b','#8b5cf6','#06b6d4'];
+ const rec=[...db.tx].sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id).slice(0,5);
+ const cd=totalCardDue(),rc=receivable();
+ return `
+ <div class="hd"><div><h1>My Money</h1><div class="d">${mlong(m)}</div></div>
+  <button class="btn sm p" onclick="go('add')">+ Add</button></div>
+
+ <div class="card" style="background:linear-gradient(135deg,#0d2a2f,#10233a);border-color:#224a52">
+  <div class="lbl">💰 Liquid Money Available</div>
+  <div class="big ${liq<0?'red':'grn'}">${liq<0?'−':''}${T(liq)}</div>
+  <div class="note" style="margin-top:7px">Cash ${T(totalCash())} · Bank ${T(totalBank('bank'))} · MFS ${T(totalBank('mfs'))}</div>
+  <div class="duebar">
+   <span class="k">💳 Credit card due</span>
+   <span class="v ${cd>0?'red':'grn'}">${cd>0?T(cd):'Clear'}</span></div>
+  <div class="duebar" style="border-top:none;padding-top:4px;margin-top:2px">
+   <span class="k">🧾 Claim receivable</span>
+   <span class="v ${rc>0?'amb':'mut'}">${rc>0?T(rc):'—'}</span></div>
+  <div class="note" style="margin-top:8px;opacity:.7">For tracking only — not included in the figure above.</div></div>
+
+ <div class="g4" style="margin-bottom:12px">
+  <div class="card"><div class="lbl">💵 Cash</div><div class="big ${totalCash()<0?'red':''}">${T(totalCash())}</div></div>
+  <div class="card"><div class="lbl">🏦 Bank</div><div class="big ${totalBank('bank')<0?'red':''}">${T(totalBank('bank'))}</div></div>
+  <div class="card"><div class="lbl">📱 MFS</div><div class="big ${totalBank('mfs')<0?'red':''}">${T(totalBank('mfs'))}</div></div>
+  <div class="card" style="${cd>0?'border-color:#4a2230;background:#1c1216':''}" onclick="go('more')">
+   <div class="lbl">💳 Due</div><div class="big ${cd>0?'red':'mut'}">${T(cd)}</div></div></div>
+
+ ${(rc>0||cd>0||iOwe()-cd>0||assetsVal()>0||owedMe()>0)?`<div class="card">
+  <h2>Outside Liquid Money <span class="note">not counted above</span></h2>
+  ${rc>0?`<div class="row" onclick="go('claim')" style="cursor:pointer">
+   <div class="fl"><div class="ico" style="background:rgba(245,158,11,.14)">🧾</div>
+    <div><div class="t">Claim Receivable</div><div class="s">Office ${T(claimOpen('office'))} · Medical ${T(claimOpen('medical'))}</div></div></div>
+   <div class="amt amb">${T(rc)} ›</div></div>`:''}
+  ${cd>0?`<div class="row" onclick="go('more')" style="cursor:pointer">
+   <div class="fl"><div class="ico" style="background:rgba(244,63,94,.14)">💳</div>
+    <div><div class="t">Credit Card Due</div><div class="s">${cardAccs().filter(a=>cardDue(a.id)>0).map(a=>esc(a.name)+' '+T(cardDue(a.id))).join(' · ')||'Owed on your cards'}</div></div></div>
+   <div class="amt red">${T(cd)} ›</div></div>`:''}
+  ${iOwe()-cd>0?`<div class="row" onclick="go('more')" style="cursor:pointer">
+   <div class="fl"><div class="ico" style="background:rgba(244,63,94,.14)">⬇</div>
+    <div><div class="t">Debts You Owe</div><div class="s">Loans from people</div></div></div>
+   <div class="amt red">${T(iOwe()-cd)} ›</div></div>`:''}
+  ${owedMe()>0?`<div class="row" onclick="go('more')" style="cursor:pointer">
+   <div class="fl"><div class="ico" style="background:rgba(34,197,94,.14)">⬆</div>
+    <div><div class="t">Lent to Others</div><div class="s">Money owed to you</div></div></div>
+   <div class="amt grn">${T(owedMe())} ›</div></div>`:''}
+  ${assetsVal()>0?`<div class="row" onclick="go('more')" style="cursor:pointer">
+   <div class="fl"><div class="ico" style="background:rgba(0,163,224,.14)">💎</div>
+    <div><div class="t">Physical Assets</div><div class="s">Gold, land, vehicle etc.</div></div></div>
+   <div class="amt acc">${T(assetsVal())} ›</div></div>`:''}
+  </div>`:''}
+
+ <div class="card"><h2>This Month</h2>
+  ${hRow('↓','rgba(34,197,94,.14)','Income','All money in','grn','+',inc)}
+  ${hRow('↑','rgba(244,63,94,.14)','Personal Expense','Your own spending','red','−',per)}
+  ${hRow('🧾','rgba(245,158,11,.14)','Office Expense','Claimable from company','amb','−',off)}
+  ${hRow('🏥','rgba(236,72,153,.14)','Medical Expense','Claimable medical','pink','−',med)}
+  ${ln?hRow('💳','rgba(139,92,246,.14)','Loan Repaid','Card & debt payments','pur','−',ln):''}
+  <hr>
+  ${hRow('🐖','rgba(0,163,224,.14)','Net Saved','Income − personal − loan',sv>=0?'grn':'red',sv<0?'−':'',sv,rate.toFixed(0)+'%')}</div>
+
+ <div class="card"><h2>Top Personal Spend</h2>
+  ${cats.length?cats.map(([c,v],i)=>`<div style="margin-bottom:10px">
+   <div style="display:flex;justify-content:space-between;font-size:12.5px"><span>${esc(c)}</span><span class="amt">${T(v)}</span></div>
+   <div class="bar"><i style="width:${per?v/per*100:0}%;background:${pal[i]}"></i></div></div>`).join('')
+  :'<div class="empty">No personal expense this month.</div>'}</div>
+
+ <div class="card"><h2>Recent <span class="lnk" onclick="go('list')">See all</span></h2>
+  ${rec.length?rec.map(txRow).join(''):'<div class="empty">Nothing yet — tap <b>Add</b> to log your first entry.</div>'}</div>`;
+}
+function hRow(ic,bg,t,s,cl,sg,v,extra){
+ return `<div class="row"><div class="fl"><div class="ico" style="background:${bg}">${ic}</div>
+  <div><div class="t">${t}</div><div class="s">${s}</div></div></div>
+  <div class="amt ${cl}">${sg}${T(v)}${extra?' · '+extra:''}</div></div>`;
+}
+
+/* ═══════════ TX ROW ═══════════ */
+function txRow(t){
+ let ic,bg,cl,sg,title,tag='';
+ if(t.kind==='income'){
+  ic='↓';bg='rgba(34,197,94,.14)';cl='grn';sg='+';
+  title = t.incType==='salary'?'Salary'
+        : t.incType==='claim' ?'Office claim received'
+        : t.incType==='mclaim'?'Medical claim received'
+        : (t.otherLabel||'—');
+  if(CK(t.incType))tag=` <span class="pill ${t.claimKind==='medical'?'p-med':'p-off'}">${t.claimKind==='medical'?'MEDICAL':'OFFICE'} ${mshow(t.claimMonth)}</span>`;
+  if(t.incType==='other')tag=' <span class="pill p-loan">OTHER</span>';
+ }else if(t.kind==='transfer'){
+  ic='⇄';bg='rgba(139,92,246,.14)';cl='pur';sg='';title='Transfer';
+ }else{
+  sg='−';
+  if(t.expType==='office'){ic='🧾';bg='rgba(245,158,11,.14)';cl='amb';title=t.cat;
+   tag=` <span class="pill ${isSettled('office',t.date.slice(0,7))?'p-done':'p-pend'}">${isSettled('office',t.date.slice(0,7))?'CLAIMED':'CLAIMABLE'}</span>`;}
+  else if(t.expType==='medical'){ic='🏥';bg='rgba(236,72,153,.14)';cl='pink';title=t.cat;
+   tag=` <span class="pill ${isSettled('medical',t.date.slice(0,7))?'p-done':'p-med'}">${isSettled('medical',t.date.slice(0,7))?'CLAIMED':'MEDICAL'}</span>`;}
+  else if(t.expType==='loan'){ic='💳';bg='rgba(139,92,246,.14)';cl='pur';title=loanName(t);
+   tag=' <span class="pill p-loan">REPAYMENT</span>';}
+  else{ic='↑';bg='rgba(244,63,94,.14)';cl='red';title=t.cat;}
+ }
+ if(t.opening){ic='🗂';bg='rgba(6,182,212,.14)';cl='cyn';tag+=' <span class="pill p-open">NO BALANCE EFFECT</span>';}
+ const sub=t.kind==='transfer'?`${accName(t.acc)} → ${accName(t.to)}`
+   :t.opening?`Back-entered claim${t.note?' · '+esc(t.note):''}`
+   :`${accName(t.acc)}${t.note?' · '+esc(t.note):''}`;
+ return `<div class="row"><div class="fl"><div class="ico" style="background:${bg}">${ic}</div>
+  <div style="min-width:0"><div class="t">${esc(title)}${tag}</div><div class="s">${dshow(t.date)} · ${sub}</div></div></div>
+  <div style="display:flex;align-items:center;gap:2px"><span class="amt ${cl}">${sg}${T(t.amt)}</span>
+  <button class="x" onclick="delTx(${t.id})">✕</button></div></div>`;
+}
+const isSettled=(k,m)=>db.settle.some(s=>s.kind===k&&s.month===m);
+function loanName(t){
+ if(t.loanKind==='card'){const a=acc(t.loanId);return a?a.name:'Card payment'}
+ const d=db.debts.find(x=>x.id==t.loanId);return d?d.person:'Loan payment';
+}
+
+/* ═══════════ ADD ═══════════ */
+function vAdd(){
+ const opts=(f)=>db.accounts.filter(f||(()=>true)).map(a=>
+  `<option value="${a.id}">${AIC[a.type]} ${esc(a.name)} · ${a.type==='card'?'due '+T(cardDue(a.id)):T(accBalance(a.id))}</option>`).join('');
+ let body='';
+ if(kind==='expense')body=addExpense(opts);
+ else if(kind==='income')body=addIncome(opts);
+ else body=addTransfer(opts);
+ const cd=totalCardDue();
+ return `<div class="hd"><div><h1>Add Entry</h1><div class="d">Balances update instantly</div></div></div>
+ <div class="seg">${[['income','Income'],['expense','Expense'],['transfer','Transfer']]
+  .map(([v,l])=>`<b data-k="${v}" class="${kind===v?'on':''}" onclick="setKind('${v}')">${l}</b>`).join('')}</div>
+ ${body}
+ <div class="card"><h2>Balances Now <span class="note">💰 liquid ${T(liquidMoney())}${cd>0?' · 💳 due '+T(cd):''}</span></h2>
+  ${db.accounts.map(a=>`<div class="row"><div class="fl"><div class="ico" style="background:var(--card2)">${AIC[a.type]}</div>
+   <div><div class="t">${esc(a.name)}</div><div class="s">${ATN[a.type]}</div></div></div>
+   <div class="amt ${a.type==='card'?(cardDue(a.id)>0?'red':'grn'):(accBalance(a.id)<0?'red':'')}">${a.type==='card'?(cardDue(a.id)>0?'due '+T(cardDue(a.id)):'clear'):T(accBalance(a.id))}</div></div>`).join('')}</div>`;
+}
+
+/* ---- EXPENSE ---- */
+function addExpense(opts){
+ const T_=[['personal','Personal Expense','Your own money, not claimable','💰'],
+           ['office','Office Expense','Auto-adds to claim receivable','🧾'],
+           ['medical','Medical Expense','Company medical, claimed separately','🏥'],
+           ['loan','Loan Payment','Repay a credit card or a person','💳']];
+ let extra='';
+ if(expType==='loan'){
+  const cards=cardAccs().filter(a=>cardDue(a.id)>0).map(a=>`<option value="card:${a.id}">💳 ${esc(a.name)} · due ${T(cardDue(a.id))}</option>`).join('');
+  const debts=db.debts.filter(d=>d.type==='owe'&&debtLeft(d)>0).map(d=>`<option value="debt:${d.id}">👤 ${esc(d.person)} · left ${T(debtLeft(d))}</option>`).join('');
+  extra = (cards||debts)
+   ? `<div class="fld"><label>Which loan are you repaying?</label><select id="iLoan">${cards}${debts}</select></div>
+      <div class="info pur">💡 This payment is not counted as an expense — it reduces that loan's outstanding balance directly.</div>`
+   : `<div class="info red">No outstanding loans. Add a credit card in <b>More → Accounts</b> or a debt in <b>More → Debts</b> first.</div>`;
+ }else{
+  extra=`<div class="fld"><label>Category</label>
+   <div class="chips">${CAT[expType].map(c=>`<div class="chip ${pickedCat===c?'on':''}" onclick="pickCat(this)">${c}</div>`).join('')}</div></div>`;
+ }
+ const note = expType==='office'?'<div class="info amb">🧾 Money leaves your account now, but stays counted as <b>receivable</b> under this month\'s office claim until you receive it.</div>'
+            : expType==='medical'?'<div class="info pink">🏥 Added to this month\'s <b>medical claim</b> — kept completely separate from office claims.</div>':'';
+ return `<div class="card">
+  <div class="ticks">${T_.map(([v,t,s,i])=>`<div class="tick ${expType===v?'on':''}" data-c="${v}" onclick="setExp('${v}')">
+   <div class="bx">✓</div><div><div class="tt">${i} ${t}</div><div class="ss">${s}</div></div></div>`).join('')}</div>
+  ${note}
+  <div class="fld"><label>Amount (৳)</label><input type="number" inputmode="decimal" id="iAmt" placeholder="0" step="0.01" min="0"></div>
+  ${extra}
+  <div class="fld"><label>Paid from</label><select id="iAcc">${opts()}</select></div>
+  <div class="f2"><div class="fld"><label>Date</label><input type="date" id="iDate" value="${today()}"></div>
+   <div class="fld"><label>Note</label><input type="text" id="iNote" placeholder="Optional"></div></div>
+  <button class="btn p" onclick="saveEntry()">Save Entry</button></div>`;
+}
+
+/* ---- INCOME ---- */
+function addIncome(opts){
+ const T_=[['salary','Salary','Your monthly pay','💼'],
+           ['claim','Office Claim Received','Settles a month of office claims','🧾'],
+           ['mclaim','Medical Claim Received','Settles a month of medical claims','🏥'],
+           ['other','Other Income','Type your own label, or leave blank','✨']];
+ const ck=CK(incType);
+ let extra='';
+ if(ck){
+  const L=ck==='medical'?'medical':'office', CL=ck==='medical'?'pink':'amb';
+  const buckets=claimMonths(ck).filter(b=>!b.settled);
+  if(!buckets.length){
+   extra=`<div class="info red">No pending ${L} claims. Log ${L} expenses first, or add earlier ones from <b>Claims → + Back-enter</b>.</div>`;
+  }else{
+   if(!claimMonth||!buckets.some(b=>b.month===claimMonth))claimMonth=buckets[0].month;
+   const b=buckets.find(x=>x.month===claimMonth);
+   extra=`<div class="fld"><label>Which month's ${L} claim?</label><select onchange="claimMonth=this.value;render()">
+     ${buckets.map(x=>`<option value="${x.month}" ${x.month===claimMonth?'selected':''}>${mlong(x.month)} · ${T(x.total)}</option>`).join('')}</select></div>
+    <div class="info" style="border-left:3px solid var(--${CL})">
+     <b>${mlong(b.month)} ${L} claim: <span class="${CL}">${T(b.total)}</span></b><br>
+     ${b.items.length} expense${b.items.length>1?'s':''} logged. Enter the <b>actual amount received</b> below — if it's more, the extra is recorded as allowance; if it's less, the shortfall is written off and the month closes.</div>`;
+  }
+ }else if(incType==='other'){
+  extra=`<div class="fld"><label>What kind of income? (optional)</label>
+   <input type="text" id="iLabel" placeholder="Leave blank if you prefer" value="${esc(otherLabel)}"></div>`;
+ }
+ return `<div class="card">
+  <div class="ticks">${T_.map(([v,t,s,i])=>`<div class="tick ${incType===v?'on':''}" data-c="${v==='mclaim'?'medical':v==='claim'?'office':''}" onclick="setInc('${v}')">
+   <div class="bx">✓</div><div><div class="tt">${i} ${t}</div><div class="ss">${s}</div></div></div>`).join('')}</div>
+  ${extra}
+  <div class="fld"><label>${ck?'Amount actually received (৳)':'Amount (৳)'}</label>
+   <input type="number" inputmode="decimal" id="iAmt" placeholder="0" step="0.01" min="0"></div>
+  <div class="fld"><label>Received in</label><select id="iAcc">${opts(a=>a.type!=='card')}</select></div>
+  <div class="f2"><div class="fld"><label>Date</label><input type="date" id="iDate" value="${today()}"></div>
+   <div class="fld"><label>Note</label><input type="text" id="iNote" placeholder="Optional"></div></div>
+  <button class="btn g" onclick="saveEntry()">Save Entry</button></div>`;
+}
+const CK=it=>it==='claim'?'office':it==='mclaim'?'medical':null;
+let claimMonth=null,otherLabel='';
+
+/* ---- TRANSFER ---- */
+function addTransfer(opts){
+ return `<div class="card">
+  <div class="info">⇄ Move money between your own accounts. To pay a credit card bill use <b>Expense → Loan Payment</b> instead.</div>
+  <div class="fld"><label>Amount (৳)</label><input type="number" inputmode="decimal" id="iAmt" placeholder="0" step="0.01" min="0"></div>
+  <div class="f2"><div class="fld"><label>From</label><select id="iAcc">${opts(a=>a.type!=='card')}</select></div>
+   <div class="fld"><label>To</label><select id="iTo">${opts(a=>a.type!=='card')}</select></div></div>
+  <div class="f2"><div class="fld"><label>Date</label><input type="date" id="iDate" value="${today()}"></div>
+   <div class="fld"><label>Note</label><input type="text" id="iNote" placeholder="Optional"></div></div>
+  <button class="btn p" onclick="saveEntry()">Save Entry</button></div>`;
+}
+
+function setKind(k){kind=k;pickedCat=null;render()}
+function setExp(v){expType=v;pickedCat=null;render()}
+function setInc(v){
+ if(incType==='other'){const e=document.getElementById('iLabel');if(e)otherLabel=e.value}
+ incType=v;claimMonth=null;render();
+}
+function pickCat(el){pickedCat=el.textContent;document.querySelectorAll('.chip').forEach(e=>e.classList.toggle('on',e===el))}
+
+/* ---- SAVE ---- */
+function saveEntry(){
+ const amt=parseFloat(document.getElementById('iAmt').value);
+ if(!amt||amt<=0)return toast('Enter an amount');
+ const date=document.getElementById('iDate').value||today();
+ const note=(document.getElementById('iNote')||{value:''}).value.trim();
+ const a=Number(document.getElementById('iAcc').value);
+
+ if(kind==='transfer'){
+  const to=Number(document.getElementById('iTo').value);
+  if(a===to)return toast('Pick two different accounts');
+  db.tx.push({id:nid(),kind:'transfer',amt,date,acc:a,to,note});
+ }
+ else if(kind==='expense'){
+  if(expType==='loan'){
+   const sel=document.getElementById('iLoan');
+   if(!sel)return toast('No loan to repay');
+   const [lk,lid]=sel.value.split(':');
+   if(lk==='card'&&Number(lid)===a)return toast('Pay the card from another account');
+   db.tx.push({id:nid(),kind:'expense',expType:'loan',loanKind:lk,loanId:Number(lid),amt,date,acc:a,note});
+  }else{
+   if(!pickedCat)return toast('Choose a category');
+   db.tx.push({id:nid(),kind:'expense',expType,amt,date,acc:a,cat:pickedCat,note});
+  }
+ }
+ else{
+  const t={id:nid(),kind:'income',incType,amt,date,acc:a,note};
+  if(incType==='other'){const e=document.getElementById('iLabel');t.otherLabel=e?e.value.trim():otherLabel;otherLabel='';}
+  const ck=CK(incType);
+  if(ck){
+   const buckets=claimMonths(ck).filter(b=>!b.settled);
+   if(!buckets.length)return toast('No pending '+ck+' claim to settle');
+   const m=claimMonth||buckets[0].month;
+   const b=buckets.find(x=>x.month===m);
+   const L=ck==='medical'?'medical':'office';
+   t.claimKind=ck;t.claimMonth=m;
+   db.settle.push({id:nid(),kind:ck,month:m,date,received:amt,mode:'paid',txId:t.id,acc:a});
+   db.tx.push(t);save();
+   const gap=b.total-amt,al=amt-b.total;
+   toast(al>0?`✓ ${mshow(m)} ${L} claim settled · ${T(b.total)} claim + <b>${T(al)} allowance</b>`
+        :gap>0?`✓ ${mshow(m)} ${L} closed · ${T(gap)} shortfall written off`
+        :`✓ ${mshow(m)} ${L} claim fully settled`);
+   claimMonth=null;view='claim';render();return;
+  }
+  db.tx.push(t);
+ }
+ save();pickedCat=null;toast('✓ Saved — balance updated');view='home';render();
+}
+
+function delTx(id){
+ const t=db.tx.find(x=>x.id===id);if(!t)return;
+ const link=db.settle.find(s=>s.txId===id);
+ if(!confirm(link?'Delete this claim income? The claim month will reopen as pending.':'Delete this entry?'))return;
+ db.tx=db.tx.filter(x=>x.id!==id);
+ if(link)db.settle=db.settle.filter(s=>s.txId!==id);
+ save();render();toast('Deleted');
+}
+
+/* ═══════════ HISTORY ═══════════ */
+let fMonth=thisMonth(),fKind='';
+function vList(){
+ const F=t=>{
+  if(fMonth&&t.date.slice(0,7)!==fMonth)return false;
+  if(!fKind)return true;
+  if(fKind==='income'||fKind==='transfer')return t.kind===fKind;
+  if(fKind==='opening')return !!t.opening;
+  return t.kind==='expense'&&t.expType===fKind;
+ };
+ const list=db.tx.filter(F).sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
+ const months=[...new Set(db.tx.map(t=>t.date.slice(0,7)))].sort().reverse();
+ if(!months.includes(thisMonth()))months.unshift(thisMonth());
+ const In=list.filter(t=>t.kind==='income'&&!t.opening).reduce((s,t)=>s+t.amt,0);
+ const Out=list.filter(t=>t.kind==='expense'&&t.expType!=='loan'&&!t.opening).reduce((s,t)=>s+t.amt,0);
+ return `<div class="hd"><div><h1>History</h1><div class="d">${list.length} entries</div></div>
+  <button class="btn sm" onclick="exportCSV()">Export</button></div>
+ <div class="fld"><select onchange="fMonth=this.value;render()">
+  <option value="">All months</option>
+  ${months.map(m=>`<option value="${m}" ${m===fMonth?'selected':''}>${mlong(m)}</option>`).join('')}</select></div>
+ <div class="chips">${[['','All'],['income','Income'],['personal','Personal'],['office','Office'],['medical','Medical'],['loan','Loan'],['transfer','Transfer'],['opening','Back-entered']]
+  .map(([v,l])=>`<div class="chip ${fKind===v?'on':''}" onclick="fKind='${v}';render()">${l}</div>`).join('')}</div>
+ <div class="g2" style="margin-bottom:12px">
+  <div class="card"><div class="lbl">Money In</div><div class="big grn" style="font-size:18px">${T(In)}</div></div>
+  <div class="card"><div class="lbl">Spent</div><div class="big red" style="font-size:18px">${T(Out)}</div></div></div>
+ <div class="card">${list.length?list.map(txRow).join(''):'<div class="empty">No entries for this filter.</div>'}</div>`;
+}
+
+/* ═══════════ CLAIMS ═══════════ */
+function vClaim(){
+ return `<div class="hd"><div><h1>Claims</h1><div class="d">Month-wise claim tracking</div></div>
+  <button class="btn sm p" onclick="pastClaim('office')">+ Back-enter</button></div>
+ <div class="g2" style="margin-bottom:12px">
+  <div class="card" style="border-color:#4a3a12;background:#1c1a12"><div class="lbl amb">🧾 Office Pending</div>
+   <div class="big amb" style="font-size:20px">${T(claimOpen('office'))}</div></div>
+  <div class="card" style="border-color:#4a1a35;background:#1c1218"><div class="lbl pink">🏥 Medical Pending</div>
+   <div class="big pink" style="font-size:20px">${T(claimOpen('medical'))}</div></div></div>
+ <div class="card"><div class="row" style="padding:0"><div><div class="lbl">Total Receivable</div>
+  <div class="big" style="font-size:22px">${T(receivable())}</div></div>
+  <div class="note" style="text-align:right;max-width:52%">Money the company owes you — not part of your liquid money.</div></div></div>
+ ${claimBlock('office','🧾 Office Claims','amb')}
+ ${claimBlock('medical','🏥 Medical Claims','pink')}`;
+}
+function claimBlock(k,title,cl){
+ const B=claimMonths(k);
+ const addLnk=`<span class="lnk" onclick="pastClaim('${k}')">+ Back-enter</span>`;
+ if(!B.length)return `<div class="card"><h2 class="${cl}">${title} ${addLnk}</h2>
+  <div class="empty">No ${k} claims yet.<br>Log new ones from <b>Add → Expense</b>, or tap <b>+ Back-enter</b> to add claims you already incurred.</div></div>`;
+ return `<div class="card"><h2 class="${cl}">${title} <span class="note">pending ${T(claimOpen(k))}</span> ${addLnk}</h2>
+ ${B.map(b=>{
+  const al=allowanceOf(b),got=gotFor(b),gap=b.settled?Math.max(0,b.total-got):0;
+  const wo=b.settle&&b.settle.mode==='writeoff';
+  const isNow=b.month===thisMonth();
+  return `<div style="background:var(--card2);border-radius:13px;padding:13px;margin-bottom:10px;${b.settled?'opacity:.85':''}">
+   <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+    <div><div style="font-size:14.5px;font-weight:700">${mlong(b.month)}
+      ${isNow?'<span class="pill p-now">CURRENT</span>':''}
+      ${b.settled?'<span class="pill p-done">CLAIMED ALREADY</span>':'<span class="pill p-pend">PENDING</span>'}</div>
+     <div class="s" style="margin-top:3px">${b.items.length} item${b.items.length>1?'s':''} · claim value ${T(b.total)}</div></div>
+    <div style="text-align:right"><div class="amt ${b.settled?'mut':cl}" style="font-size:17px">${T(b.total)}</div>
+     <button class="dots" onclick="claimMenu('${k}','${b.month}')">⋯</button></div></div>
+   ${b.settled?`
+    <div class="bar">${b.total?`<i style="width:${Math.min(100,got/Math.max(got,b.total)*100)}%;background:var(--grn)"></i>`:''}
+     ${al>0?`<i style="width:${al/Math.max(got,b.total)*100}%;background:var(--cyn)"></i>`:''}</div>
+    <div class="note" style="margin-top:7px">
+     Received <b class="grn">${T(got)}</b> on ${dshow(b.settle.date)}
+     ${al>0?`<br>↳ ${T(b.total)} ${k} claim + <b class="cyn">${T(al)} other allowance</b>`:''}
+     ${gap>0&&!wo?`<br>↳ <b class="red">${T(gap)} shortfall</b> written off — month closed`:''}
+     ${wo?`<br>↳ <b class="red">Settled manually</b> — no payment recorded`:''}</div>`
+   :`<div class="note" style="margin-top:7px">Awaiting reimbursement. Record it from <b>Add → Income → ${k==='medical'?'Medical':'Office'} Claim Received</b>.</div>`}
+   <div style="margin-top:9px">${b.items.map(t=>`<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);padding:4px 0">
+    <span>${t.opening?'🗂 ':''}${esc(t.cat)}${t.note?' · '+esc(t.note):''}</span><span class="mono">${T(t.amt)}</span></div>`).join('')}</div>
+  </div>`}).join('')}</div>`;
+}
+function claimMenu(k,m){
+ const b=claimMonths(k).find(x=>x.month===m);
+ sheet(`<h3>${mlong(m)} · ${k==='office'?'Office':'Medical'} Claim</h3>
+  <div class="info">Claim value <b>${T(b.total)}</b> · ${b.settled?'settled':'pending'}</div>
+  ${!b.settled?`
+   <div class="mi" onclick="closeSheet();quickClaim('${k}','${m}')">💰 <div><b>Record money received</b><div class="ss note">Adds income and closes this month</div></div></div>
+   <div class="mi" onclick="closeSheet();writeOff('${k}','${m}')">✖️ <div><b>Settle without payment</b><div class="ss note">Close the month, add no income</div></div></div>
+   <div class="mi" onclick="closeSheet();pastClaim('${k}','${m}')">➕ <div><b>Add more to this month</b><div class="ss note">Append extra claim lines</div></div></div>`
+  :`<div class="mi" onclick="closeSheet();reopen('${k}','${m}')">↩️ <div><b>Reopen this claim</b><div class="ss note">Marks it pending again</div></div></div>`}
+  <button class="btn" style="margin-top:12px" onclick="closeSheet()">Close</button>`);
+}
+function quickClaim(k,m){kind='income';incType=k==='medical'?'mclaim':'claim';claimMonth=m;view='add';render()}
+function writeOff(k,m){
+ if(!confirm('Close this claim month with no payment recorded?'))return;
+ db.settle.push({id:nid(),kind:k,month:m,date:today(),received:0,mode:'writeoff'});
+ save();render();toast('Claim settled manually');
+}
+function reopen(k,m){
+ const s=db.settle.find(x=>x.kind===k&&x.month===m);if(!s)return;
+ if(s.txId&&!confirm('This will also delete the linked claim income entry. Continue?'))return;
+ if(s.txId)db.tx=db.tx.filter(t=>t.id!==s.txId);
+ db.settle=db.settle.filter(x=>x.id!==s.id);
+ save();render();toast('Claim reopened');
+}
+
+/* ═══════ BACK-ENTER CLAIMS (current month included) ═══════ */
+let pcKind='office',pcMode='lump',pcRows=[],pcMonth=null;
+function pastClaim(k,month){
+ pcKind=k||'office';pcMode='lump';
+ pcRows=[{cat:CAT[pcKind][0],amt:''},{cat:CAT[pcKind][1],amt:''},{cat:CAT[pcKind][2],amt:''}];
+ pcMonth=month||thisMonth();
+ drawPast();
+}
+function setPcKind(k){pcKind=k;pcRows=pcRows.map(r=>({cat:CAT[k].includes(r.cat)?r.cat:CAT[k][0],amt:r.amt}));drawPast()}
+function setPcMode(m){readPast();pcMode=m;drawPast()}
+function readPast(){
+ const mEl=document.getElementById('pcM');if(mEl&&mEl.value)pcMonth=mEl.value;
+ if(pcMode==='cat')pcRows=pcRows.map((r,i)=>({
+  cat:(document.getElementById('pcC'+i)||{value:r.cat}).value,
+  amt:(document.getElementById('pcA'+i)||{value:r.amt}).value}));
+}
+function pcAddRow(){readPast();pcRows.push({cat:CAT[pcKind][0],amt:''});drawPast()}
+function pcDelRow(i){readPast();pcRows.splice(i,1);if(!pcRows.length)pcRows.push({cat:CAT[pcKind][0],amt:''});drawPast()}
+function pcTotal(){return pcRows.reduce((s,r)=>s+(parseFloat(r.amt)||0),0)}
+function drawPast(){
+ const CL=pcKind==='medical'?'pink':'amb';
+ const months=[];for(let i=0;i<25;i++)months.push(monthBack(i));
+ const existing=claimMonths(pcKind).find(b=>b.month===pcMonth);
+ const isNow=pcMonth===thisMonth();
+ sheet(`<h3>🗂 Back-enter Claim</h3>
+ <div class="info">For claims you <b>already incurred</b> — this month or earlier. They add to your receivable, but <b>do not touch any account balance</b>, because that money is already reflected in your opening balances.</div>
+
+ <div class="fld"><label>Claim type</label>
+  <div class="chips">
+   <div class="chip ${pcKind==='office'?'on':''}" onclick="setPcKind('office')">🧾 Office Claim</div>
+   <div class="chip ${pcKind==='medical'?'on':''}" onclick="setPcKind('medical')">🏥 Medical Claim</div></div></div>
+
+ <div class="fld"><label>Claim month</label><select id="pcM" onchange="pcMonth=this.value;drawPast()">
+  ${months.map((m,i)=>`<option value="${m}" ${m===pcMonth?'selected':''}>${mlong(m)}${i===0?' — this month':''}</option>`).join('')}</select></div>
+ ${isNow?`<div class="info" style="border-left:3px solid var(--acc)">📅 <b>${mlong(pcMonth)}</b> is the current month — use this for everything you have already spent so far this month.</div>`:''}
+ ${existing?`<div class="info ${CL}">⚠️ ${mlong(pcMonth)} already has ${T(existing.total)} in ${pcKind} claims${existing.settled?' (settled)':''}. New lines will be <b>added on top</b>.</div>`:''}
+
+ <div class="fld"><label>How do you want to enter it?</label>
+  <div class="chips">
+   <div class="chip ${pcMode==='lump'?'on':''}" onclick="setPcMode('lump')">Single total</div>
+   <div class="chip ${pcMode==='cat'?'on':''}" onclick="setPcMode('cat')">Category-wise</div></div></div>
+
+ ${pcMode==='lump'
+  ? `<div class="fld"><label>Total ${pcKind} claim for ${mlong(pcMonth)} (৳)</label>
+     <input type="number" inputmode="decimal" id="pcLump" placeholder="e.g. 35000" step="0.01" min="0"></div>
+     <div class="note">Saved as one line: “Business Expense Claim”.</div>`
+  : `<label>Break it down by category</label>
+     ${pcRows.map((r,i)=>`<div class="crow">
+       <select id="pcC${i}">${CAT[pcKind].map(c=>`<option ${c===r.cat?'selected':''}>${c}</option>`).join('')}</select>
+       <input type="number" inputmode="decimal" id="pcA${i}" placeholder="0" step="0.01" value="${r.amt}" oninput="pcLive()">
+       <button class="x" onclick="pcDelRow(${i})">✕</button></div>`).join('')}
+     <button class="btn sm" style="width:100%;margin-bottom:8px" onclick="pcAddRow()">+ Add another category</button>
+     <div class="ctot"><span>Total</span><span class="${CL}" id="pcSum">${T(pcTotal())}</span></div>`}
+
+ <div class="fld"><label>Note (optional)</label><input id="pcN" placeholder="e.g. submitted to HR"></div>
+ <button class="btn p" onclick="savePast()">Save Claim</button>
+ <button class="btn" style="margin-top:8px" onclick="closeSheet()">Cancel</button>`);
+}
+function pcLive(){
+ pcRows=pcRows.map((r,i)=>({cat:(document.getElementById('pcC'+i)||{value:r.cat}).value,
+                            amt:(document.getElementById('pcA'+i)||{value:r.amt}).value}));
+ const el=document.getElementById('pcSum');if(el)el.textContent=T(pcTotal());
+}
+function savePast(){
+ const mEl=document.getElementById('pcM');
+ const m=(mEl&&mEl.value)?mEl.value:pcMonth;
+ const note=(document.getElementById('pcN')||{value:''}).value.trim();
+ const date = m===thisMonth() ? today() : m+'-15';
+ let added=0,total=0;
+ if(pcMode==='lump'){
+  const v=parseFloat((document.getElementById('pcLump')||{value:0}).value);
+  if(!v||v<=0)return toast('Enter the claim total');
+  db.tx.push({id:nid(),kind:'expense',expType:pcKind,amt:v,date,acc:0,
+    cat:pcKind==='medical'?'Medical Claim (back-entered)':'Business Expense Claim',note,opening:true});
+  added=1;total=v;
+ }else{
+  readPast();
+  const rows=pcRows.filter(r=>parseFloat(r.amt)>0);
+  if(!rows.length)return toast('Enter at least one amount');
+  rows.forEach(r=>{const v=parseFloat(r.amt);
+   db.tx.push({id:nid(),kind:'expense',expType:pcKind,amt:v,date,acc:0,cat:r.cat,note,opening:true});
+   added++;total+=v;});
+ }
+ save();closeSheet();view='claim';render();
+ toast(`✓ ${mlong(m)} · ${T(total)} added to ${pcKind} claims (${added} line${added>1?'s':''})`);
+}
+
+/* ═══════════ MORE ═══════════ */
+function vMore(){
+ const cd=totalCardDue();
+ const openOff=db.tx.filter(t=>t.opening&&t.expType==='office').reduce((s,t)=>s+t.amt,0);
+ const openMed=db.tx.filter(t=>t.opening&&t.expType==='medical').reduce((s,t)=>s+t.amt,0);
+ return `<div class="hd"><div><h1>More</h1><div class="d">Accounts, claims, assets, debts & backup</div></div></div>
+
+ <div class="card"><h2>Cash / Bank / MFS <span class="lnk" onclick="editAcc()">+ Add</span></h2>
+  ${liquidAccs().map(a=>`<div class="row"><div class="fl"><div class="ico" style="background:var(--card2)">${AIC[a.type]}</div>
+   <div><div class="t">${esc(a.name)}</div><div class="s">${ATN[a.type]} · opening ${T(a.opening)}</div></div></div>
+   <div style="display:flex;align-items:center;gap:2px"><span class="amt ${accBalance(a.id)<0?'red':''}">${T(accBalance(a.id))}</span>
+   <button class="x" onclick="editAcc(${a.id})">✎</button></div></div>`).join('')}
+  <hr><div class="row" style="padding-top:0"><div class="t">💰 Liquid money</div><div class="amt grn">${T(totalLiquid())}</div></div></div>
+
+ <div class="card"><h2>💳 Credit Cards <span class="lnk" onclick="editAcc(0,'card')">+ Add Card</span></h2>
+  ${cardAccs().length?cardAccs().map(a=>{
+   const due=cardDue(a.id),lim=Number(a.limit||0),av=lim?Math.max(0,lim-due):0,u=lim?Math.min(100,due/lim*100):0;
+   return `<div style="background:var(--card2);border-radius:13px;padding:13px;margin-bottom:9px">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+     <div><div class="t">💳 ${esc(a.name)}</div><div class="s">${lim?'Limit '+T(lim)+' · available '+T(av):'No limit set'}</div></div>
+     <div style="text-align:right"><div class="amt ${due>0?'red':'grn'}">${due>0?T(due):'Clear'}</div>
+      <div class="s">outstanding</div></div></div>
+    ${lim?`<div class="bar"><i style="width:${u}%;background:${u>80?'var(--red)':u>50?'var(--amb)':'var(--grn)'}"></i></div>`:''}
+    <div style="display:flex;gap:7px;margin-top:10px">
+     ${due>0?`<button class="btn sm p" onclick="payCard(${a.id})">Pay bill</button>`:''}
+     <button class="btn sm" onclick="editAcc(${a.id})">Edit</button></div></div>`}).join('')
+  :'<div class="empty">No credit cards added.<br>Tap <b>+ Add Card</b> — spending on a card raises its outstanding instead of reducing cash.</div>'}
+  ${cd?`<hr><div class="row" style="padding-top:0"><div class="t">Total card due</div><div class="amt red">${T(cd)}</div></div>`:''}</div>
+
+ <div class="card"><h2>🗂 Back-entered Claims <span class="lnk" onclick="pastClaim('office')">+ Add</span></h2>
+  <div class="note" style="margin-bottom:10px">Claims already incurred before you began logging — including earlier this month. They count as receivable but never move an account balance.</div>
+  <div class="g2">
+   <div style="background:var(--card2);padding:11px;border-radius:11px"><div class="lbl amb">🧾 Office entered</div><div class="amt amb" style="font-size:17px">${T(openOff)}</div></div>
+   <div style="background:var(--card2);padding:11px;border-radius:11px"><div class="lbl pink">🏥 Medical entered</div><div class="amt pink" style="font-size:17px">${T(openMed)}</div></div></div>
+  ${openOff+openMed?`<button class="btn sm" style="width:100%;margin-top:10px" onclick="go('claim')">Review in Claims →</button>`:''}</div>
+
+ <div class="card"><h2>Other Assets <span class="lnk" onclick="editAsset()">+ Add</span></h2>
+  ${db.assets.length?db.assets.map(a=>`<div class="row"><div class="fl"><div class="ico" style="background:var(--card2)">💎</div>
+   <div><div class="t">${esc(a.name)}</div><div class="s">${esc(a.note||'Asset')}</div></div></div>
+   <div style="display:flex;align-items:center;gap:2px"><span class="amt">${T(a.value)}</span><button class="x" onclick="delAsset(${a.id})">✕</button></div></div>`).join('')
+  :'<div class="empty">Gold, land, DPS, shares, vehicle — anything you own.</div>'}
+  ${db.assets.length?`<hr><div class="row" style="padding-top:0"><div class="t">Total</div><div class="amt acc">${T(assetsVal())}</div></div>`:''}</div>
+
+ <div class="card"><h2>Debts & Lending <span class="lnk" onclick="editDebt()">+ Add</span></h2>
+  <div class="g2" style="margin-bottom:11px">
+   <div style="background:var(--card2);padding:11px;border-radius:11px"><div class="lbl">I owe (incl. cards)</div><div class="amt red" style="font-size:17px">${T(iOwe())}</div></div>
+   <div style="background:var(--card2);padding:11px;border-radius:11px"><div class="lbl">Owed to me</div><div class="amt grn" style="font-size:17px">${T(owedMe())}</div></div></div>
+  ${db.debts.length?db.debts.map(d=>{const L=debtLeft(d);return `<div class="row"><div class="fl">
+   <div class="ico" style="background:${d.type==='owe'?'rgba(244,63,94,.14)':'rgba(34,197,94,.14)'}">${d.type==='owe'?'⬇':'⬆'}</div>
+   <div style="min-width:0"><div class="t">${esc(d.person)} ${L===0?'<span class="pill p-done">CLEARED</span>':''}</div>
+   <div class="s">${d.type==='owe'?'You owe':'Owes you'} · paid ${T(d.amount-L)} of ${T(d.amount)}${d.due?' · due '+dshow(d.due):''}</div></div></div>
+   <div style="display:flex;align-items:center;gap:6px"><span class="amt ${d.type==='owe'?'red':'grn'}">${T(L)}</span>
+   ${L>0?`<button class="btn sm" onclick="${d.type==='owe'?`payDebtGo(${d.id})`:`recvDebt(${d.id})`}">${d.type==='owe'?'Pay':'Receive'}</button>`:''}
+   <button class="x" onclick="delDebt(${d.id})">✕</button></div></div>`}).join('')
+  :'<div class="empty">Track money you borrowed or lent to others.</div>'}</div>
+
+ <div class="card"><h2>Data</h2>
+  <div class="f2" style="margin-bottom:9px"><button class="btn" onclick="exportCSV()">⬇ CSV</button>
+   <button class="btn" onclick="backup()">💾 Backup</button></div>
+  <button class="btn" onclick="document.getElementById('rf').click()">⬆ Restore backup</button>
+  <input type="file" id="rf" accept=".json" style="display:none" onchange="restore(event)">
+  <button class="btn r" style="margin-top:9px" onclick="wipe()">Erase everything</button>
+  <hr><div class="note"><b>Install on phone:</b> open this file in Chrome → ⋮ → <b>Add to Home screen</b>. Opens full-screen, works offline.<br><br>
+  <b>Data stays on this phone.</b> Take a <b>Backup</b> weekly and keep the file in OneDrive.</div></div>`;
+}
+
+/* --- accounts --- */
+function editAcc(id,preset){
+ const a=id?acc(id):null,tp=a?a.type:(preset||'cash');
+ sheet(`<h3>${a?'Edit':'New'} ${tp==='card'?'Credit Card':'Account'}</h3>
+ <div class="fld"><label>Name</label><input id="aN" value="${a?esc(a.name):''}" placeholder="${tp==='card'?'e.g. City Bank Visa':'e.g. DBBL / Nagad'}"></div>
+ <div class="fld"><label>Type</label><select id="aT" onchange="document.getElementById('limWrap').style.display=this.value==='card'?'block':'none';document.getElementById('opLbl').textContent=this.value==='card'?'Current outstanding due (৳)':'Opening balance (৳)'">
+  ${Object.entries(ATN).map(([v,l])=>`<option value="${v}" ${tp===v?'selected':''}>${AIC[v]} ${l}</option>`).join('')}</select></div>
+ <div class="fld"><label id="opLbl">${tp==='card'?'Current outstanding due (৳)':'Opening balance (৳)'}</label>
+  <input type="number" id="aO" value="${a?a.opening:0}" step="0.01"></div>
+ <div class="fld" id="limWrap" style="display:${tp==='card'?'block':'none'}"><label>Credit limit (৳, optional)</label>
+  <input type="number" id="aL" value="${a&&a.limit?a.limit:''}" step="1" placeholder="e.g. 100000"></div>
+ <button class="btn p" onclick="saveAcc(${id||0})">Save</button>
+ ${a?`<button class="btn r" style="margin-top:8px" onclick="delAcc(${id})">Delete</button>`:''}
+ <button class="btn" style="margin-top:8px" onclick="closeSheet()">Cancel</button>`);
+}
+function saveAcc(id){
+ const n=document.getElementById('aN').value.trim();if(!n)return toast('Name required');
+ const o={name:n,type:document.getElementById('aT').value,opening:parseFloat(document.getElementById('aO').value)||0,
+   limit:parseFloat(document.getElementById('aL').value)||0};
+ if(id)Object.assign(acc(id),o);else db.accounts.push({id:nid(),...o});
+ save();closeSheet();render();toast('Saved');
+}
+function delAcc(id){
+ if(db.accounts.length<2)return toast('Keep at least one account');
+ if(db.tx.some(t=>!t.opening&&(t.acc==id||t.to==id||(t.expType==='loan'&&t.loanKind==='card'&&t.loanId==id))))return toast('Has entries — cannot delete');
+ db.accounts=db.accounts.filter(a=>a.id!==id);save();closeSheet();render();toast('Deleted');
+}
+function payCard(id){kind='expense';expType='loan';view='add';render();
+ setTimeout(()=>{const s=document.getElementById('iLoan');if(s)s.value='card:'+id},30);}
+
+/* --- assets --- */
+function editAsset(){
+ sheet(`<h3>New Asset</h3>
+ <div class="fld"><label>Name</label><input id="sN" placeholder="e.g. Gold / DPS / Land"></div>
+ <div class="fld"><label>Current value (৳)</label><input type="number" id="sV" step="0.01"></div>
+ <div class="fld"><label>Note</label><input id="sD" placeholder="Optional"></div>
+ <button class="btn p" onclick="saveAsset()">Save</button>
+ <button class="btn" style="margin-top:8px" onclick="closeSheet()">Cancel</button>`);
+}
+function saveAsset(){
+ const n=document.getElementById('sN').value.trim(),v=parseFloat(document.getElementById('sV').value);
+ if(!n||!v)return toast('Name and value needed');
+ db.assets.push({id:nid(),name:n,value:v,note:document.getElementById('sD').value.trim()});
+ save();closeSheet();render();toast('Asset added');
+}
+function delAsset(id){db.assets=db.assets.filter(a=>a.id!==id);save();render()}
+
+/* --- debts --- */
+function editDebt(){
+ sheet(`<h3>New Debt / Loan</h3>
+ <div class="fld"><label>Type</label><select id="dT"><option value="owe">I borrowed (I owe)</option><option value="owed">I lent (owed to me)</option></select></div>
+ <div class="fld"><label>Person / Institution</label><input id="dP" placeholder="Name"></div>
+ <div class="fld"><label>Amount (৳)</label><input type="number" id="dA" step="0.01"></div>
+ <div class="fld"><label>Money moved through</label><select id="dC"><option value="0">Not through my accounts</option>
+  ${liquidAccs().map(a=>`<option value="${a.id}">${AIC[a.type]} ${esc(a.name)}</option>`).join('')}</select></div>
+ <div class="fld"><label>Due date</label><input type="date" id="dD"></div>
+ <div class="info">Repay this later from <b>Add → Expense → Loan Payment</b> — it will deduct automatically.</div>
+ <button class="btn p" onclick="saveDebt()">Save</button>
+ <button class="btn" style="margin-top:8px" onclick="closeSheet()">Cancel</button>`);
+}
+function saveDebt(){
+ const p=document.getElementById('dP').value.trim(),a=parseFloat(document.getElementById('dA').value);
+ if(!p||!a)return toast('Name and amount needed');
+ db.debts.push({id:nid(),type:document.getElementById('dT').value,person:p,amount:a,
+  acc:Number(document.getElementById('dC').value)||0,due:document.getElementById('dD').value,date:today(),pay:[]});
+ save();closeSheet();render();toast('Saved');
+}
+function payDebtGo(id){kind='expense';expType='loan';view='add';render();
+ setTimeout(()=>{const s=document.getElementById('iLoan');if(s)s.value='debt:'+id},30);}
+function recvDebt(id){
+ const d=db.debts.find(x=>x.id===id);
+ sheet(`<h3>Receive from ${esc(d.person)}</h3>
+ <div class="info">Remaining ${T(debtLeft(d))}</div>
+ <div class="fld"><label>Amount (৳)</label><input type="number" id="pA" value="${debtLeft(d)}" step="0.01"></div>
+ <div class="fld"><label>Received in</label><select id="pB">${liquidAccs().map(a=>`<option value="${a.id}">${AIC[a.type]} ${esc(a.name)}</option>`).join('')}</select></div>
+ <button class="btn g" onclick="recvDebtGo(${id})">Confirm</button>
+ <button class="btn" style="margin-top:8px" onclick="closeSheet()">Cancel</button>`);
+}
+function recvDebtGo(id){
+ const d=db.debts.find(x=>x.id===id),v=parseFloat(document.getElementById('pA').value);
+ if(!v||v<=0)return toast('Enter amount');
+ (d.pay=d.pay||[]).push({date:today(),amt:v,acc:Number(document.getElementById('pB').value)});
+ save();closeSheet();render();toast('✓ Recorded');
+}
+function delDebt(id){if(!confirm('Delete this record?'))return;db.debts=db.debts.filter(d=>d.id!==id);save();render()}
+
+/* ═══════════ DATA IO ═══════════ */
+function dl(b,n){const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=n;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),900)}
+function exportCSV(){
+ if(!db.tx.length)return toast('Nothing to export');
+ const R=[['Date','Kind','Type','Category / Label','Note','Account','To / Loan','Amount','Claim Month','Claim Status','Back-entered']];
+ [...db.tx].sort((a,b)=>a.date.localeCompare(b.date)).forEach(t=>{
+  let ty='',lab='',to='',cm='',cs='';
+  if(t.kind==='income'){ty=t.incType;lab=t.incType==='other'?(t.otherLabel||''):(CK(t.incType)?t.claimKind+' claim received':'Salary');cm=t.claimMonth||''}
+  else if(t.kind==='expense'){ty=t.expType;lab=t.expType==='loan'?loanName(t):t.cat;
+   if(t.expType==='loan')to=loanName(t);
+   if(t.expType==='office'||t.expType==='medical'){cm=t.date.slice(0,7);cs=isSettled(t.expType,cm)?'Claimed':'Pending'}}
+  else{ty='transfer';to=accName(t.to)}
+  R.push([t.date,t.kind,ty,lab,t.note||'',t.opening?'—':accName(t.acc),to,t.amt.toFixed(2),cm,cs,t.opening?'Yes':'']);
+ });
+ R.push([]);R.push(['POSITION SNAPSHOT']);
+ R.push(['Liquid money (cash+bank+MFS)',liquidMoney().toFixed(2)]);
+ R.push(['Cash',totalCash().toFixed(2)]);R.push(['Bank',totalBank('bank').toFixed(2)]);R.push(['MFS',totalBank('mfs').toFixed(2)]);
+ R.push(['Credit card due',totalCardDue().toFixed(2)]);
+ R.push(['Claim receivable',receivable().toFixed(2)]);
+ R.push([]);R.push(['CLAIM SUMMARY']);R.push(['Type','Month','Claim Value','Received','Allowance','Shortfall','Status']);
+ ['office','medical'].forEach(k=>claimMonths(k).forEach(b=>
+  R.push([k,b.month,b.total.toFixed(2),gotFor(b).toFixed(2),allowanceOf(b).toFixed(2),
+   (b.settled?Math.max(0,b.total-gotFor(b)):0).toFixed(2),b.settled?'Claimed':'Pending'])));
+ const csv='\uFEFF'+R.map(r=>r.map(c=>`"${String(c==null?'':c).replace(/"/g,'""')}"`).join(',')).join('\n');
+ dl(new Blob([csv],{type:'text/csv;charset=utf-8'}),'MyMoney_'+today()+'.csv');toast('CSV downloaded');
+}
+function backup(){dl(new Blob([JSON.stringify(db)],{type:'application/json'}),'MyMoney_Backup_'+today()+'.json');toast('Backup saved')}
+function restore(e){
+ const f=e.target.files[0];if(!f)return;const r=new FileReader();
+ r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.accounts||!d.tx)throw 0;
+  db=d;['assets','debts','settle'].forEach(k=>{if(!Array.isArray(db[k]))db[k]=[]});
+  save();render();toast('✓ Restored')}catch(_){toast('Invalid backup file')}};
+ r.readAsText(f);e.target.value='';
+}
+function wipe(){if(confirm('Erase ALL data permanently?')&&confirm('Really sure? Take a backup first.')){db=blank();save();view='home';render();toast('Cleared')}}
+
+/* ═══════════ BOOT ═══════════ */
+load();render();
+window.addEventListener('beforeunload',save);
+</script>
+</body>
+</html>
