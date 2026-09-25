@@ -119,6 +119,17 @@ hr{border:none;border-top:1px solid var(--line);margin:13px 0}
 .duebar{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px dashed #2f4a52}
 .duebar .k{font-size:11px;color:var(--muted);font-weight:600}
 .duebar .v{font-size:14px;font-weight:700}
+/* sync */
+.sbadge{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;padding:4px 9px;border-radius:20px;background:var(--card2);border:1px solid var(--line);cursor:pointer;white-space:nowrap}
+.sdot{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
+.s-synced{color:var(--grn)}.s-synced .sdot{background:var(--grn)}
+.s-offline{color:var(--amb)}.s-offline .sdot{background:var(--amb)}
+.s-pushing{color:var(--acc)}.s-pushing .sdot{background:var(--acc);animation:pulse 1s infinite}
+.s-signedout{color:var(--muted)}.s-signedout .sdot{background:var(--muted)}
+.s-error{color:var(--red)}.s-error .sdot{background:var(--red)}
+.s-off{color:var(--muted)}.s-off .sdot{background:#39405200}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.avat{width:38px;height:38px;border-radius:50%;background:var(--card2);object-fit:cover}
 </style>
 </head>
 <body>
@@ -127,7 +138,27 @@ hr{border:none;border-top:1px solid var(--line);margin:13px 0}
 <div class="sheet" id="sheet" onclick="if(event.target===this)closeSheet()"><div class="in" id="sheetIn"></div></div>
 <div class="toast" id="toast"></div>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
 <script>
+/* ═══════════════════════════════════════════════════════════
+   FIREBASE CONFIG — already filled in for Bivuti's project.
+   To go back to local-only, blank out the apiKey value.
+   ═══════════════════════════════════════════════════════════ */
+const FB_CONFIG = {
+  apiKey: "AIzaSyAJl4suUXMLWNQeaKxLALSSQLhf6UR_lk0",
+  authDomain: "money-manager-48b45.firebaseapp.com",
+  projectId: "money-manager-48b45",
+  storageBucket: "money-manager-48b45.firebasestorage.app",
+  messagingSenderId: "813936247827",
+  appId: "1:813936247827:web:1024d32f9f2eaad9e8abe6"
+};
+/* ═══════════════════════════════════════════════════════════ */
+
+const SYNC_ENABLED = !!(FB_CONFIG.apiKey && FB_CONFIG.apiKey.length > 15 && FB_CONFIG.projectId);
+
 /* ═══════════ DATA ═══════════ */
 const KEY='mymoney_v3';
 const AIC={cash:'💵',bank:'🏦',mfs:'📱',card:'💳'};
@@ -144,14 +175,158 @@ function blank(){return{
   {id:1,name:'Cash in Hand',type:'cash',opening:0},
   {id:2,name:'Bank Account',type:'bank',opening:0},
   {id:3,name:'bKash',type:'mfs',opening:0}],
- tx:[],assets:[],debts:[],settle:[],seq:100};}
-function load(){
- try{db=JSON.parse(localStorage.getItem(KEY))||blank()}catch(e){db=blank()}
+ tx:[],assets:[],debts:[],settle:[],seq:100,rev:0};}
+function normalize(){
  const b=blank();['accounts','tx','assets','debts','settle'].forEach(k=>{if(!Array.isArray(db[k]))db[k]=b[k]});
  if(!db.seq)db.seq=100;
+ if(typeof db.rev!=='number')db.rev=0;
 }
-function save(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){toast('Storage full')}}
+function load(){
+ try{db=JSON.parse(localStorage.getItem(KEY))||blank()}catch(e){db=blank()}
+ normalize();
+}
+function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){toast('Storage full')}}
+function save(){saveLocal();schedulePush();}
 const nid=()=>++db.seq;
+const isEmptyDb=()=>!db.tx.length&&!db.assets.length&&!db.debts.length&&!db.settle.length
+                    &&db.accounts.every(a=>!Number(a.opening));
+
+/* ═══════════ SYNC ═══════════ */
+let fbAuth=null,fbStore=null,fbDoc=null,fbUser=null,unsubDoc=null;
+let syncState = SYNC_ENABLED ? 'starting' : 'off';
+let syncErr='',pushTimer=null,applyingRemote=false,lastSyncAt=0;
+
+function setSync(s,e){syncState=s;if(e!==undefined)syncErr=e;paintBadge();if(view==='more')render();}
+function paintBadge(){
+ const el=document.getElementById('syncBadge');
+ if(el)el.outerHTML=badgeHTML();
+}
+function badgeLabel(){
+ return {starting:'Connecting…',signedout:'Sign in to sync',connecting:'Connecting…',
+   synced:'Synced',offline:'Offline',pushing:'Saving…',error:'Sync error',off:'Local only'}[syncState]||syncState;
+}
+function badgeHTML(){
+ return `<span id="syncBadge" class="sbadge s-${syncState}" onclick="syncSheet()"><span class="sdot"></span>${badgeLabel()}</span>`;
+}
+
+function initSync(){
+ if(!SYNC_ENABLED){syncState='off';return;}
+ if(typeof firebase==='undefined'){setSync('error','Firebase SDK did not load. Check your internet connection.');return;}
+ try{
+  firebase.initializeApp(FB_CONFIG);
+  fbAuth=firebase.auth();
+  fbStore=firebase.firestore();
+  fbStore.enablePersistence({synchronizeTabs:true}).catch(()=>{});
+  fbAuth.getRedirectResult().catch(e=>setSync('error',e.message));
+  fbAuth.onAuthStateChanged(u=>{
+   fbUser=u||null;
+   if(unsubDoc){unsubDoc();unsubDoc=null;}
+   if(u){setSync('connecting');attachDoc(u.uid);}
+   else{setSync('signedout','');}
+  });
+  setSync('signedout');
+ }catch(e){setSync('error',e.message);}
+}
+
+function attachDoc(uid){
+ fbDoc=fbStore.collection('users').doc(uid).collection('app').doc('money');
+ unsubDoc=fbDoc.onSnapshot({includeMetadataChanges:true},snap=>{
+  const cached=snap.metadata.fromCache;
+  if(!snap.exists){pushNow();setSync(cached?'offline':'synced');return;}
+  const d=snap.data()||{};
+  let remote=null;
+  try{remote=JSON.parse(d.payload||'null')}catch(_){}
+  const rrev=Number(d.rev||0),lrev=Number(db.rev||0);
+  if(remote&&(rrev>lrev||(isEmptyDb()&&rrev>=lrev))){
+   applyingRemote=true;
+   db=remote;normalize();db.rev=rrev;
+   saveLocal();
+   applyingRemote=false;
+   lastSyncAt=Date.now();
+   render();
+   setSync(cached?'offline':'synced');
+   return;
+  }
+  if(lrev>rrev){pushNow();return;}
+  lastSyncAt=Date.now();
+  setSync(cached?'offline':'synced');
+ },err=>setSync('error',err.message));
+}
+
+function schedulePush(){
+ if(!fbDoc||applyingRemote)return;
+ setSync('pushing');
+ clearTimeout(pushTimer);
+ pushTimer=setTimeout(pushNow,700);
+}
+function pushNow(){
+ if(!fbDoc)return;
+ db.rev=Number(db.rev||0)+1;
+ saveLocal();
+ fbDoc.set({payload:JSON.stringify(db),rev:db.rev,updatedAt:Date.now(),device:deviceTag()},{merge:true})
+  .then(()=>{lastSyncAt=Date.now();setSync('synced','')})
+  .catch(e=>setSync('error',e.message));
+}
+function deviceTag(){
+ const ua=navigator.userAgent;
+ return /Android/i.test(ua)?'Android phone':/iPhone|iPad/i.test(ua)?'iPhone/iPad':'Computer';
+}
+function signIn(){
+ if(!fbAuth)return toast('Sync not configured');
+ const p=new firebase.auth.GoogleAuthProvider();
+ fbAuth.signInWithPopup(p).catch(()=>fbAuth.signInWithRedirect(p).catch(e=>setSync('error',e.message)));
+}
+function signOutSync(){
+ if(!fbAuth)return;
+ if(!confirm('Sign out? Your data stays on this device, but will stop syncing.'))return;
+ fbAuth.signOut();closeSheet();
+}
+function forcePush(){
+ if(!fbDoc)return toast('Not signed in');
+ if(!confirm('Overwrite the cloud copy with THIS device\u2019s data?'))return;
+ pushNow();closeSheet();toast('Pushed this device to cloud');
+}
+function forcePull(){
+ if(!fbDoc)return toast('Not signed in');
+ if(!confirm('Replace THIS device\u2019s data with the cloud copy?'))return;
+ fbDoc.get().then(s=>{
+  if(!s.exists)return toast('No cloud copy yet');
+  const d=s.data()||{};let r=null;
+  try{r=JSON.parse(d.payload||'null')}catch(_){}
+  if(!r)return toast('Cloud copy unreadable');
+  applyingRemote=true;db=r;normalize();db.rev=Number(d.rev||0);saveLocal();applyingRemote=false;
+  closeSheet();render();toast('Pulled cloud copy to this device');
+ }).catch(e=>toast('Error: '+e.message));
+}
+function syncSheet(){
+ const when=lastSyncAt?new Date(lastSyncAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'—';
+ let body='';
+ if(!SYNC_ENABLED){
+  body=`<div class="info">This copy is running <b>local-only</b>. Data is saved on this device and never leaves it.</div>`;
+ }else if(syncState==='signedout'){
+  body=`<div class="info">Sign in with Google to sync this app across your phone and computer.<br><br>
+   Your data is stored under your own account and is not visible to anyone else.</div>
+   <button class="btn p" onclick="signIn()">Sign in with Google</button>`;
+ }else if(syncState==='error'){
+  body=`<div class="info red">${esc(syncErr||'Unknown error')}</div>
+   <button class="btn" onclick="location.reload()">Reload app</button>
+   ${fbUser?`<button class="btn r" style="margin-top:8px" onclick="signOutSync()">Sign out</button>`:
+     `<button class="btn p" style="margin-top:8px" onclick="signIn()">Try sign in again</button>`}`;
+ }else{
+  body=`<div class="row" style="padding-top:0">
+    <div class="fl">${fbUser&&fbUser.photoURL?`<img class="avat" src="${esc(fbUser.photoURL)}">`:'<div class="ico" style="background:var(--card2)">👤</div>'}
+     <div><div class="t">${esc(fbUser?(fbUser.displayName||'Signed in'):'—')}</div>
+      <div class="s">${esc(fbUser?fbUser.email:'')}</div></div></div></div>
+   <div class="row"><div class="t">Status</div><div class="amt ${syncState==='synced'?'grn':syncState==='offline'?'amb':'acc'}">${badgeLabel()}</div></div>
+   <div class="row"><div class="t">Last synced</div><div class="amt mut">${when}</div></div>
+   <div class="row"><div class="t">This device</div><div class="amt mut">${deviceTag()}</div></div>
+   <div class="info" style="margin-top:12px">Changes sync automatically within a second. Offline edits upload as soon as you reconnect.</div>
+   <div class="mi" onclick="forcePush()">⬆️ <div><b>Force push</b><div class="ss note">Make the cloud match this device</div></div></div>
+   <div class="mi" onclick="forcePull()">⬇️ <div><b>Force pull</b><div class="ss note">Make this device match the cloud</div></div></div>
+   <button class="btn r" style="margin-top:12px" onclick="signOutSync()">Sign out</button>`;
+ }
+ sheet(`<h3>☁️ Sync</h3>${body}<button class="btn" style="margin-top:8px" onclick="closeSheet()">Close</button>`);
+}
 
 /* ═══════════ DATE HELPERS (LOCAL TIME — never UTC) ═══════════ */
 const p2=n=>String(n).padStart(2,'0');
@@ -174,9 +349,6 @@ function closeSheet(){document.getElementById('sheet').classList.remove('on')}
 function sheet(h){document.getElementById('sheetIn').innerHTML=h;document.getElementById('sheet').classList.add('on');document.getElementById('sheet').scrollTop=0}
 
 /* ═══════════ BALANCES ═══════════ */
-/* Cards hold NEGATIVE balance = outstanding due.
-   Entries flagged t.opening are back-entered claims: they count as receivable
-   but must NOT move any account balance (that money moved before tracking). */
 function accBalance(id){
  const a=acc(id);if(!a)return 0;
  let b=a.type==='card'? -Number(a.opening||0) : Number(a.opening||0);
@@ -202,10 +374,6 @@ const totalBank=(only)=>db.accounts.filter(a=>only?a.type===only:(a.type==='bank
 const totalLiquid=()=>liquidAccs().reduce((s,a)=>s+accBalance(a.id),0);
 const cardDue=id=>Math.max(0,-accBalance(id));
 const totalCardDue=()=>cardAccs().reduce((s,a)=>s+cardDue(a.id),0);
-
-/* Headline = LIQUID MONEY ONLY: cash + bank + MFS.
-   Claims, assets, lending, debts and card dues are shown separately,
-   never mixed into the headline figure. */
 const liquidMoney=()=>totalLiquid();
 
 /* ═══════════ CLAIMS ═══════════ */
@@ -266,7 +434,8 @@ function vHome(){
  const cd=totalCardDue(),rc=receivable();
  return `
  <div class="hd"><div><h1>My Money</h1><div class="d">${mlong(m)}</div></div>
-  <button class="btn sm p" onclick="go('add')">+ Add</button></div>
+  <div style="display:flex;align-items:center;gap:8px">${badgeHTML()}
+  <button class="btn sm p" onclick="go('add')">+ Add</button></div></div>
 
  <div class="card" style="background:linear-gradient(135deg,#0d2a2f,#10233a);border-color:#224a52">
   <div class="lbl">💰 Liquid Money Available</div>
@@ -382,7 +551,7 @@ function vAdd(){
  else if(kind==='income')body=addIncome(opts);
  else body=addTransfer(opts);
  const cd=totalCardDue();
- return `<div class="hd"><div><h1>Add Entry</h1><div class="d">Balances update instantly</div></div></div>
+ return `<div class="hd"><div><h1>Add Entry</h1><div class="d">Balances update instantly</div></div>${badgeHTML()}</div>
  <div class="seg">${[['income','Income'],['expense','Expense'],['transfer','Transfer']]
   .map(([v,l])=>`<b data-k="${v}" class="${kind===v?'on':''}" onclick="setKind('${v}')">${l}</b>`).join('')}</div>
  ${body}
@@ -641,7 +810,7 @@ function reopen(k,m){
  save();render();toast('Claim reopened');
 }
 
-/* ═══════ BACK-ENTER CLAIMS (current month included) ═══════ */
+/* ═══════ BACK-ENTER CLAIMS ═══════ */
 let pcKind='office',pcMode='lump',pcRows=[],pcMonth=null;
 function pastClaim(k,month){
  pcKind=k||'office';pcMode='lump';
@@ -733,7 +902,19 @@ function vMore(){
  const cd=totalCardDue();
  const openOff=db.tx.filter(t=>t.opening&&t.expType==='office').reduce((s,t)=>s+t.amt,0);
  const openMed=db.tx.filter(t=>t.opening&&t.expType==='medical').reduce((s,t)=>s+t.amt,0);
- return `<div class="hd"><div><h1>More</h1><div class="d">Accounts, claims, assets, debts & backup</div></div></div>
+ const sDesc={starting:'Connecting to cloud…',signedout:'Not signed in — tap to enable sync',
+  connecting:'Connecting…',synced:'All changes saved to cloud',offline:'Offline — will upload when reconnected',
+  pushing:'Saving changes…',error:syncErr||'Sync error',off:'Local only — data stays on this device'}[syncState]||'';
+ return `<div class="hd"><div><h1>More</h1><div class="d">Accounts, claims, assets, debts & sync</div></div>${badgeHTML()}</div>
+
+ <div class="card" style="${syncState==='error'?'border-color:#4a2230':syncState==='synced'?'border-color:#1e4030':''}">
+  <h2>☁️ Sync <span class="lnk" onclick="syncSheet()">Manage</span></h2>
+  <div class="row" style="padding-top:0;cursor:pointer" onclick="syncSheet()">
+   <div class="fl">${fbUser&&fbUser.photoURL?`<img class="avat" src="${esc(fbUser.photoURL)}">`:`<div class="ico" style="background:var(--card2)">${SYNC_ENABLED?'☁️':'📴'}</div>`}
+    <div><div class="t">${fbUser?esc(fbUser.displayName||fbUser.email||'Signed in'):badgeLabel()}</div>
+     <div class="s">${esc(sDesc)}</div></div></div>
+   <div class="amt ${syncState==='synced'?'grn':syncState==='error'?'red':'mut'}">›</div></div>
+  ${SYNC_ENABLED&&syncState==='signedout'?`<button class="btn p" style="margin-top:10px" onclick="signIn()">Sign in with Google</button>`:''}</div>
 
  <div class="card"><h2>Cash / Bank / MFS <span class="lnk" onclick="editAcc()">+ Add</span></h2>
   ${liquidAccs().map(a=>`<div class="row"><div class="fl"><div class="ico" style="background:var(--card2)">${AIC[a.type]}</div>
@@ -790,8 +971,7 @@ function vMore(){
   <button class="btn" onclick="document.getElementById('rf').click()">⬆ Restore backup</button>
   <input type="file" id="rf" accept=".json" style="display:none" onchange="restore(event)">
   <button class="btn r" style="margin-top:9px" onclick="wipe()">Erase everything</button>
-  <hr><div class="note"><b>Install on phone:</b> open this file in Chrome → ⋮ → <b>Add to Home screen</b>. Opens full-screen, works offline.<br><br>
-  <b>Data stays on this phone.</b> Take a <b>Backup</b> weekly and keep the file in OneDrive.</div></div>`;
+  <hr><div class="note">${SYNC_ENABLED?'<b>Synced across your devices.</b> Backups are still worth taking — they protect against accidental deletion, which sync would copy everywhere.':'<b>Data stays on this device.</b> Take a <b>Backup</b> weekly and keep the file in OneDrive.'}</div></div>`;
 }
 
 /* --- accounts --- */
@@ -910,15 +1090,21 @@ function backup(){dl(new Blob([JSON.stringify(db)],{type:'application/json'}),'M
 function restore(e){
  const f=e.target.files[0];if(!f)return;const r=new FileReader();
  r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.accounts||!d.tx)throw 0;
-  db=d;['assets','debts','settle'].forEach(k=>{if(!Array.isArray(db[k]))db[k]=[]});
-  save();render();toast('✓ Restored')}catch(_){toast('Invalid backup file')}};
+  const keepRev=Number(db.rev||0);
+  db=d;normalize();db.rev=keepRev+1;
+  save();render();toast('✓ Restored'+(fbDoc?' — syncing to your other devices':''))}catch(_){toast('Invalid backup file')}};
  r.readAsText(f);e.target.value='';
 }
-function wipe(){if(confirm('Erase ALL data permanently?')&&confirm('Really sure? Take a backup first.')){db=blank();save();view='home';render();toast('Cleared')}}
+function wipe(){if(confirm('Erase ALL data permanently?')&&confirm('Really sure? Take a backup first.')){
+ const keepRev=Number(db.rev||0);db=blank();db.rev=keepRev+1;save();view='home';render();toast('Cleared')}}
 
 /* ═══════════ BOOT ═══════════ */
-load();render();
-window.addEventListener('beforeunload',save);
+load();
+initSync();
+render();
+window.addEventListener('beforeunload',saveLocal);
+window.addEventListener('online',()=>{if(fbDoc)setSync('synced')});
+window.addEventListener('offline',()=>{if(fbDoc)setSync('offline')});
 </script>
 </body>
 </html>
